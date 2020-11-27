@@ -2,6 +2,9 @@
 #include "windows.h"
 #include "ImageMatch.hpp"
 #include <time.h>
+
+#define IMAGE_HEIGHT_MAX 1080
+
 static inline uint64_t get_time()
 {
     time_t clock;
@@ -30,12 +33,11 @@ unsigned char* readBmp()
     FILE* fp;
     if ((fp = fopen(file_str, "rb")) == NULL)  //以二进制的方式打开文件
     {
-
-        return FALSE;
+        return NULL;
     }
     if (fseek(fp, sizeof(BITMAPFILEHEADER), 0))  //跳过BITMAPFILEHEADE
     {
-        return FALSE;
+        return NULL;
     }
     BITMAPINFOHEADER infoHead;
     fread(&infoHead, sizeof(BITMAPINFOHEADER), 1, fp);   //从fp中读取BITMAPINFOHEADER信息到infoHead中,同时fp的指针移动
@@ -57,12 +59,16 @@ unsigned char* readBmp()
 
 int main()
 {
-    ImageMatch* match = new ImageMatch();
+    ImageMatch* match = new ImageMatch(IMAGE_HEIGHT_MAX);
     while (true) {
         unsigned char* img1 = readBmp();
         unsigned char* img2 = readBmp();
+        if (img1 == NULL || img2 == NULL) {
+            printf("img is null\n");
+            return 0;
+        }
         INT32 start = (INT32)get_time() / 1000;
-        int vector = match->do_match((Pixel32Bit*)img1, (Pixel32Bit*)img2, 1920, 1080);
+        int vector = match->do_match((Pixel32Bit*)img1, 0, 0, 1920, 1080, (Pixel32Bit*)img2, 0, 0, 1920, 1080);
         INT32 end = (INT32)get_time() / 1000;
         printf("match vector is %d cost time %d\n", vector, end - start);
         Sleep(2);
