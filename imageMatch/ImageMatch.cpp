@@ -2,9 +2,9 @@
 #include <memory>
 
 #define MAX_PIXEL_SAME 3
-#define HORIZONTAL_JUMP_SAMPLES 30
+#define HORIZONTAL_JUMP_SAMPLES 40
 #define VERTICAL_JUMP_SAMPLES   15
-#define SAME_SAMPLE_RATIO       4
+#define SAME_SAMPLE_RATIO       10
 
 ImageMatch::ImageMatch(int surface_height)
 {
@@ -58,24 +58,26 @@ int ImageMatch::compute_vector(void)
 {   
     int tmp = 0, vector = -1, flag;
     for (int i = 1; i < max_height; i++) {
-        if (match_table_up[i] > tmp) {
+        if (match_table_up[i] >= tmp) {
             tmp = match_table_up[i];
             vector = i;
             flag = -1;
         }
-        if (match_table_down[i] > tmp) {
+        if (match_table_down[i] >= tmp) {
             tmp = match_table_down[i];
             vector = i;
             flag = 1;
         }
+        //printf("%d tmp %d %d\n", i, match_table_up[i], match_table_down[i]);
     }
     
     if (match_table_down[0] >= sample_num / 2 && match_table_down[0] > tmp) {
         return 0;
     }
 
-    if (tmp < sample_num / SAME_SAMPLE_RATIO) {
-        if (match_table_down[0] > sample_num / SAME_SAMPLE_RATIO) {
+    int score = sample_num / SAME_SAMPLE_RATIO ? sample_num / SAME_SAMPLE_RATIO : 1;
+    if (tmp < score) {
+        if (match_table_down[0] > score) {
             vector = 0;
         } else {
             vector = -1;
