@@ -60,6 +60,7 @@ unsigned char* readBmp()
 int main()
 {
     ImageMatch* match = new ImageMatch(IMAGE_HEIGHT_MAX);
+    int i = 1;
     while (true) {
         unsigned char* img1 = readBmp();
         unsigned char* img2 = readBmp();
@@ -70,7 +71,8 @@ int main()
         INT32 start = (INT32)get_time() / 1000;
         int vector = match->do_match((Pixel32Bit*)img1, 0, 0, 1920, 1080, (Pixel32Bit*)img2, 0, 0, 1920, 1080);
         INT32 end = (INT32)get_time() / 1000;
-        printf("match vector is %d cost time %d\n", vector, end - start);
+        printf("match image %d %d, match vector is %d cost time %d\n", i, i + 1, vector, end - start);
+        i += 2;
         Sleep(2);
     }
 }

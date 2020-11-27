@@ -19,6 +19,7 @@ private:
     int  max_height;
     int  horizontal_jump;
     int  vertical_jump;
+    int  sample_num;
     int* match_table_up;
     int* match_table_down;
     int  current_x;
@@ -27,6 +28,7 @@ private:
     void reset(void);
     void match_line(Pixel32Bit* current_pixel, Pixel32Bit* dest_start, Pixel32Bit* dest_end, int dest_y, int dest_width);
     bool pixel_same(Pixel32Bit* pixel_a, Pixel32Bit* pixel_b);
+    bool pixel_is_colorful(Pixel32Bit* pixel);
     int  compute_vector(void);
 };
 

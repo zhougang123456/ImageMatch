@@ -2,8 +2,8 @@
 #include <memory>
 
 #define MAX_PIXEL_SAME 3
-#define HORIZONTAL_JUMP_SAMPLES 20
-#define VERTICAL_JUMP_SAMPLES   10
+#define HORIZONTAL_JUMP_SAMPLES 30
+#define VERTICAL_JUMP_SAMPLES   15
 #define SAME_SAMPLE_RATIO       4
 
 ImageMatch::ImageMatch(int surface_height)
@@ -27,6 +27,7 @@ void ImageMatch::reset(void)
 {
     current_x = 0;
     current_y = 0;
+    sample_num = 0;
     memset(match_table_up, 0, sizeof(int) * max_height);
     memset(match_table_down, 0, sizeof(int) * max_height);
 }
@@ -34,13 +35,6 @@ void ImageMatch::reset(void)
 bool ImageMatch::pixel_same(Pixel32Bit* pixel_a, Pixel32Bit* pixel_b)
 {   
     int i = 0;
-    if (pixel_a->r == 0 && pixel_a->g == 0 && pixel_a->b == 0) {
-        return false;
-    }
-    if (pixel_a->r == 255 && pixel_a->g == 255 && pixel_a->b == 255) {
-        return false;
-    }
-   
     while (i < MAX_PIXEL_SAME) {
         if (pixel_a->r != pixel_b->r || pixel_a->g != pixel_b->g || pixel_a->b != pixel_b->b) {
             return false;
@@ -49,14 +43,21 @@ bool ImageMatch::pixel_same(Pixel32Bit* pixel_a, Pixel32Bit* pixel_b)
         pixel_a++;
         pixel_b++;
     }
- 
+    return true;
+}
+
+bool ImageMatch::pixel_is_colorful(Pixel32Bit* pixel)
+{   
+    if (pixel->r == pixel->g  && pixel->g == pixel->b) {
+        return false;
+    }
     return true;
 }
 
 int ImageMatch::compute_vector(void)
 {   
     int tmp = 0, vector = -1, flag;
-    for (int i = 0; i < max_height; i++) {
+    for (int i = 1; i < max_height; i++) {
         if (match_table_up[i] > tmp) {
             tmp = match_table_up[i];
             vector = i;
@@ -68,12 +69,23 @@ int ImageMatch::compute_vector(void)
             flag = 1;
         }
     }
-    if (tmp < HORIZONTAL_JUMP_SAMPLES * VERTICAL_JUMP_SAMPLES / SAME_SAMPLE_RATIO) {
-        vector = -1;
+    
+    if (match_table_down[0] >= sample_num / 2 && match_table_down[0] > tmp) {
+        return 0;
     }
+
+    if (tmp < sample_num / SAME_SAMPLE_RATIO) {
+        if (match_table_down[0] > sample_num / SAME_SAMPLE_RATIO) {
+            vector = 0;
+        } else {
+            vector = -1;
+        }
+    }
+
     if (vector == -1) {
         return max_height;
     } 
+
     return vector * flag;
 }
 
@@ -123,7 +135,11 @@ int ImageMatch::do_match(Pixel32Bit* src, int src_x, int src_y, int src_width, i
         for (current_y = top + vertical_jump; current_y < bottom - vertical_jump; current_y += vertical_jump)
         {
             current_pixel = src + src_width * (current_y - src_y) + src_offset;
-            match_line(current_pixel, dest_start, dest_end, dest_y, dest_width);
+            if (pixel_is_colorful(current_pixel)) {
+                match_line(current_pixel, dest_start, dest_end, dest_y, dest_width);
+                sample_num++;
+            }
+            
         }
     }
 
