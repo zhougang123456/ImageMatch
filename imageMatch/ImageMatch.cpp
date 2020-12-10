@@ -57,6 +57,7 @@ bool ImageMatch::pixel_is_colorful(Pixel32Bit* pixel)
 int ImageMatch::compute_vector(void)
 {   
     int tmp = 0, vector = -1, flag;
+    /* find the nearest position except for the same position */
     for (int i = 1; i < max_height; i++) {
         if (match_table_up[i] >= tmp) {
             tmp = match_table_up[i];
